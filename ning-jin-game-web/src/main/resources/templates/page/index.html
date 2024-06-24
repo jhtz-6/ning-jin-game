@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>走顶</title>
+    <!-- 引入 Vue.js -->
+
+    <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+
+    <script th:src="@{/js/axios.min.js}"></script>
+    <link  rel="stylesheet" type="text/css" th:href="@{/css/index.css}">
+    <script th:src="@{/js/vue3.js}"></script>
+    <script th:src="@{/js/vant.min.js}"></script>
+
+
+
+</head>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        height: 100vh;
+        margin: 0;
+        background-color: #282c34;
+        color: white;
+        font-family: 'Arial', sans-serif;
+        overflow: hidden; /* 隐藏滚动条 */
+    }
+
+
+    .other-user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: -5%; /* 顶部 */
+    }
+
+    .bottom-user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 2%; /* 底部 */
+    }
+
+    .other-user-avatar,
+    .bottom-user-avatar {
+        font-size: 2em;
+        margin: 5%;
+    }
+
+    .board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0px;
+        width: auto; /* 设置宽度为自适应 */
+        max-width: 100%; /* 设置最大宽度为100% */
+        height: auto; /* 设置高度为自适应 */
+        max-height: 100%; /* 设置最大高度为100% */
+    }
+
+
+    .row {
+        display: flex;
+    }
+
+    .cell {
+        width: 60px;
+        height: 60px;
+        border: 2px solid #61dafb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        font-size: 1.5em;
+    }
+
+    /* 新增样式，使按钮在底部正中间 */
+    /* 新增样式，使按钮在底部正中间 */
+    /* ... 其他样式 ... */
+
+    .buttons-container {
+        display: flex;
+        width: 100%;
+        justify-content: space-between; /* 均分空间 */
+        position: absolute;
+        bottom: 0%; /* 底部 */
+    }
+
+    .start-match-button,
+    .invite-friend-button {
+        flex: 1; /* 均分宽度 */
+    }
+    #app {
+        width: 100%;
+    }
+    /* 样式省略其他部分，添加 copy-button 样式 */
+    .copy-button {
+        margin-top: 8px;
+    }
+    /* ... 其他样式 ... */
+
+
+    /* ... 其他样式 ... */
+
+    .additional-buttons-container {
+        display: flex;
+        width: 100%;
+        justify-content: space-between; /* 均分空间 */
+        margin-bottom: 8px; /* 设置上边距，可调整位置 */
+    }
+
+    .additional-button {
+        flex: 1;
+    }
+
+    /* ... 其他样式 ... */
+
+
+
+
+</style>
+<body>
+<!--<bgsound  th:src="@{/music/background.MP3}"loop="infinite" >
+</bgsound >-->
+
+<!-- 添加 audio 元素 -->
+<!--<audio ref="audioPlayer" controls >
+    <source src="https://110.40.208.47:8089/music/background.MP3" type="audio/mp3" />
+</audio>-->
+
+
+
+
+<div id="app">
+    <div >
+        <van-notice-bar scrollable  background="#282c34" color = "#61dafb"
+                        left-icon="volume-o"
+                        text="宁晋小游戏-走顶-内测;让好友把身份信息复制给你,邀请好友开始游戏吧~~~"
+        />
+    </div>
+    <div style="display:none">
+        <audio controls="controls" loop  th:src="@{/music/bg-Gaming.MP3}" ref="bgGamingAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/click-anywhere.MP3}" ref="clickAnywhereAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/move-error.MP3}" ref="moveErrorAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/selectChess.MP3}" ref="selectChessAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/moveChess.MP3}" ref="moveChessAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/fail.MP3}" ref="failAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/success.MP3}" ref="successAudio"></audio>
+        <audio controls="controls"   th:src="@{/music/killChess.MP3}" ref="killChessAudio"></audio>
+
+    </div>
+
+    <div style="display:none">
+        <audio controls="controls" loop  th:src="@{/music/background.MP3}" ref="audio"></audio>
+    </div>
+
+
+    <div>
+        <van-icon name="play-circle-o" @click="bgMusicController(true)" :style = "{display:bgMusicPlay}" size="30" color="rgb(97, 218, 251)"/>
+    </div>
+    <div>
+        <van-icon name="pause-circle-o" @click="bgMusicController(false)" :style = "{display:bgMusicPause}" size="30" color="rgb(97, 218, 251)"/>
+        </div>
+
+    <div class="other-user-info">
+        <div class="other-user-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div>{{ otheruserName }}</div>
+        <div style="display: none">{{ otherUserId }}</div>
+    </div>
+    <div class="board">
+        <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
+            <div v-for="(cell, columnIndex) in row" :key="columnIndex" class="cell"
+                 :style="{ backgroundColor: cell.color }" @click="handleCellClick(rowIndex, columnIndex)">
+                {{ cell.content }}
+            </div>
+        </div>
+    </div>
+    <div class="bottom-user-info">
+        <div>{{ userName }}</div>
+        <div style="display: none">{{ userId }}</div>
+        <div v-if="!showReturnButton">
+            <!-- 添加复制按钮 -->
+            <van-button
+                    class="copy-button"
+                    round
+                    size="normal"
+                    color="#61dafb"
+                    type="default"
+                    @click="copyUserId"
+            >身份信息复制</van-button>
+            <!-- 添加复制按钮 -->
+            <van-button
+                    class="copy-button"
+                    round
+                    size="normal"
+                    color="#61dafb"
+                    type="default"
+                    @click="clickShare"
+            >分享链接邀请</van-button>
+        </div>
+        <div v-if="showReturnButton">
+            <van-button
+                    class="copy-button"
+                    round
+                    size="normal"
+                    color="#61dafb"
+                    type="default"
+                    @click="redirectToHome"
+            >返回首页</van-button>
+        </div>
+
+
+        <div class="bottom-user-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+    </div>
+
+    <!-- 新增容器用于放置上面的三个按钮 -->
+    <!-- 新增容器用于放置上面的按钮和下面的三个按钮 -->
+    <!-- 新增的三个按钮容器 #61dafb     rgb(76 204 32)-->
+    <div class="additional-buttons-container" v-if="!showReturnButton">
+        <van-button class="additional-button" round size="large" :color="fourColor" type="primary" @click="columnButtonClick(4,true)">
+            4阶(默认)
+        </van-button>
+        <van-button class="additional-button" round size="large" :color="fiveColor" type="primary" @click="columnButtonClick(5,true)">
+            5阶
+        </van-button>
+        <van-button class="additional-button" round size="large" :color="sixColor" type="primary" @click="columnButtonClick(6,true)">
+            6阶
+        </van-button>
+    </div>
+
+    <div class="buttons-container" v-if="!showReturnButton">
+        <!-- 下面的按钮 -->
+        <van-button class="start-match-button" round size="large" color="#61dafb" type="primary" @click="startMatch">
+            {{ startMatchButton }}
+        </van-button>
+        <van-button class="invite-friend-button" round size="large" color="#61dafb" type="primary" @click="inviteFriend">
+            {{ inviteFriendButton }}
+        </van-button>
+    </div>
+
+
+    <van-dialog v-model:show="inviteFriendDialog" title="邀请好友"  show-cancel-button @confirm="confirmInviteFriend" @cancel = "cancelInviteFriend">
+        <van-cell-group inset>
+            <van-field v-model="friendUserId" required  label="好友身份信息" placeholder="请输入好友身份信息" />
+        </van-cell-group>
+    </van-dialog>
+
+    <div>
+        <van-share-sheet
+                v-model:show="showShare"
+                title="分享给好友,好友点击链接即可和你开始游戏"
+                :options="options"
+                @select="selectShare"
+                @cancel="cancelSelect"
+                cancel-text = "取消"
+        />
+    </div>
+
+</div>
+
+
+<script th:inline="javascript">
+    const {createApp} = Vue;
+
+    const app = createApp({
+
+        data() {
+            return {
+                showReturnButton: false, // 控制按钮显示与隐藏的变量
+                showShare : false,
+                options :[
+                    { name: '微信', icon: 'wechat', description:'暂不可用'},
+                    { name: '复制链接', icon: 'link' }
+                ],
+                currentBg:true,
+                currentBgPlay:true,
+                bgMusicPlay:"",
+                bgMusicPause:"none",
+                fourColor:'rgb(76 204 32)',
+                fiveColor:'#61dafb',
+                sixColor:'#61dafb',
+                friendUserId:'',
+                inviteFriendDialog:false,
+                list:[],
+                type:"",
+                columnNumber:4,
+                socketEntity:{
+                    columnNumber:this.columnNumber,
+                    type:this.type,
+                    userId:this.userId,
+                    friendUserId:this.friendUserId,
+                    otherUserId:this.otherUserId,
+                    userName:this.userName,
+                },
+                ip: '',
+                otherUserId: '',
+                inviteFriendButton:'邀请好友',
+                startMatchButton: '开始匹配',
+                userName: '',
+                otheruserName: '对手(单机待匹配)',
+                currentChess: 'O',
+                otherChess: 'X',
+                userId: '',
+                board: [
+                    [{content: '', color: '#282c34', clickable: true},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                    [{content: '', color: '#282c34', clickable: true},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                    [{content: '', color: '#282c34', clickable: true},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                    [{content: '', color: '#282c34', clickable: true},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                ],
+                cellClickData: {
+                    boards: '',
+                    row: '',
+                    column: '',
+                    currentCell: null,
+                    beforeCell: null,
+                    otherUserId: '',
+                    userId: '',
+                    columnNumber:''
+                },
+            };
+        },
+        methods: {
+            redirectToHome() {
+                // 使用路由导航，重定向到首页
+                // 使用获取到的地址进行页面跳转
+                this.$vant.showConfirmDialog({
+                    title: '提示',
+                    message:
+                        '如果您正在游戏中,返回首页将中断您正在进行的游戏~~',
+                })
+                    .then(() => {
+                        // on confirm
+                        window.location.href = window.location.origin+"/ningJingGame/zouDing/index";
+                        this.showReturnButton = false;
+                    })
+                    .catch(() => {
+                        // on cancel
+                    });
+            },
+            cancelSelect(){
+                this.showShare = false;
+            },
+            clickShare(){
+                this.showShare = true;
+            },
+            selectShare (option){
+                if(option.name === "微信"){
+                    this.$vant.showFailToast('分享至微信暂不可用');
+                    return;
+                }else if(option.name === "复制链接"){
+                    this.copyData(window.location.origin+"/ningJingGame/zouDing/appointInvite?userId="+
+                        document.querySelector(".bottom-user-info div:nth-child(2)").innerText.trim()+"&columnNumber="+this.columnNumber);
+                    this.$vant.showSuccessToast('复制链接成功,请把链接发给微信好友等');
+                    this.showShare = false;
+                }
+
+            },
+            bgMusicController(play){
+                if(this.currentBg){
+                    if(play === true){
+                        this.currentBgPlay = true;
+                        //播放音乐
+                        this.$refs.audio.play();
+                        this.bgMusicPause = "";
+                        this.bgMusicPlay = "none";
+                    }  else{
+                        this.currentBgPlay = false;
+                        this.bgMusicPause = "none";
+                        this.bgMusicPlay = "";
+                        this.$refs.audio.pause();
+                    }
+                }else{
+                    if(play === true){
+                        //播放音乐
+                        this.currentBgPlay = true;
+                        this.$refs.bgGamingAudio.play();
+                        this.bgMusicPause = "";
+                        this.bgMusicPlay = "none";
+                    }  else{
+                        this.currentBgPlay = false;
+                        this.bgMusicPause = "none";
+                        this.bgMusicPlay = "";
+                        this.$refs.bgGamingAudio.pause();
+                    }
+                }
+
+            },
+            columnButtonClick(selectColumn,showToast){
+                if(this.otheruserName !== "对手(单机待匹配)"){
+                    this.$vant.showDialog({
+                        title: '提示',
+                        message: '您正处于游戏中,不可以更改阶数,请刷新页面后更改~',
+                    }).then(() => {
+                    });
+                    return;
+                }
+                this.columnNumber = selectColumn;
+                this.fiveColor = "#61dafb";
+                this.fourColor = "#61dafb";
+                this.sixColor = "#61dafb";
+                if(selectColumn === 4 || selectColumn === "4"){
+                    if(showToast){
+                        this.$vant.showToast('您已选择四阶(适合新手)');
+                    }
+                    this.fourColor = "rgb(76 204 32)";
+                    this.fiveColor = "#61dafb";
+                    this.sixColor = "#61dafb";
+                }else if(selectColumn === 5 || selectColumn === "5"){
+                    if(showToast){
+                        this.$vant.showToast('您已选择五阶(适合老手)');
+                    }
+                    this.fiveColor = "rgb(76 204 32)";
+                    this.fourColor = "#61dafb";
+                    this.sixColor = "#61dafb";
+                } else if(selectColumn === 6 || selectColumn === "6"){
+                    if(showToast){
+                        this.$vant.showToast('您已选择六阶(适合高手)');
+                    }
+                    this.sixColor = "rgb(76 204 32)";
+                    this.fiveColor = "#61dafb";
+                    this.fourColor = "#61dafb";
+                }
+                if(this.otherUserId === null || this.otherUserId === ""){
+                    this.type = "standAlone";
+                    this.buildSocketEntityAndSend();
+                }
+                try{
+                    this.$refs.clickAnywhereAudio.play();
+                }catch (e) {
+                }
+            },
+            buildSocketEntityAndSend(){
+                this.socketEntity.columnNumber = this.columnNumber;
+                this.socketEntity.type = this.type;
+                this.socketEntity.userId = this.userId;
+                this.socketEntity.friendUserId = this.friendUserId;
+                this.socketEntity.userName = this.userName;
+                this.socketEntity.otherUserId = this.otherUserId;
+                socket.send(JSON.stringify(this.socketEntity));
+            },
+            copyUserId() {
+                const userIdElement = document.querySelector(".bottom-user-info div:nth-child(2)");
+                this.$refs.clickAnywhereAudio.play();
+
+                if (userIdElement) {
+                    const userId = userIdElement.innerText.trim();
+                    this.copyData(userId);
+                    // 显示复制成功提示
+                    this.$vant.showToast('身份信息复制成功');
+
+                }
+            },
+
+            copyData(data){
+                // 创建一个 textarea 元素并设置文本
+                const textarea = document.createElement("textarea");
+                textarea.value = data;
+                document.body.appendChild(textarea);
+
+                // 选中文本并执行复制命令
+                textarea.select();
+                document.execCommand("copy");
+
+                // 移除 textarea
+                document.body.removeChild(textarea);
+            },
+
+            hideCopySuccess() {
+                // 隐藏复制成功提示
+                this.showCopySuccess = false;
+            },
+            inviteFriend(){
+                this.$refs.clickAnywhereAudio.play();
+                this.inviteFriendDialog = true;
+            },
+            confirmInviteFriend(){
+                if(this.friendUserId === this.userId){
+                    this.$refs.moveErrorAudio.play();
+                    this.$vant.showFailToast('不能邀请自己哦~~');
+                    this.friendUserId="";
+                    return;
+                }
+                if(this.friendUserId ===""){
+                    this.$refs.moveErrorAudio.play();
+                    this.$vant.showFailToast('请输入好友身份信息');
+                    return;
+                }
+                this.$refs.clickAnywhereAudio.play();
+                console.log("确认邀请好友:"+this.friendUserId);
+                this.type = "invite";
+                this.buildSocketEntityAndSend();
+                //socket.send("invite:" + this.userId + ":" + this.friendUserId);
+                this.$vant.showSuccessToast('邀请已发送');
+                this.friendUserId="";
+            },
+            cancelInviteFriend(){
+                this.$refs.clickAnywhereAudio.play();
+                console.log("取消邀请好友");
+                this.$vant.showFailToast('您已取消邀请好友');
+                this.friendUserId="";
+            },
+            startMatch() {
+                this.$refs.clickAnywhereAudio.play();
+                // Add your logic for starting the match here
+                if (this.startMatchButton === "匹配中") {
+                    this.$vant.showFailToast('匹配中');
+                    return;
+                }
+                if (this.startMatchButton === "匹配成功") {
+                    this.$vant.showFailToast('您已经匹配成功');
+                    return;
+                }
+                console.log('开始匹配');
+                this.type = "match";
+                this.buildSocketEntityAndSend();
+                console.log('socketEntity:', this.socketEntity);
+                this.startMatchButton = "匹配中";
+            },
+            handleCellClick(row, column) {
+                //this.list.value.push({ id: Math.random(), text: 'Barrage' }); otheruserName: '',
+                console.log(`Clicked on cell at row ${row}, column ${column}`);
+                if (!this.board[row][column].clickable) {
+                    this.$refs.moveErrorAudio.play();
+                    this.$vant.showFailToast('不能移动到这里');
+                    return;
+                }
+                if (this.otheruserName !== "对手(单机待匹配)" && this.board[row][column].content === this.otherChess) {
+                    this.$refs.moveErrorAudio.play();
+                    this.$vant.showFailToast('不能选择对方棋子');
+                    return;
+                }
+                this.cellClickData.row = row;
+                this.cellClickData.column = column;
+                this.cellClickData.boards = this.board;
+                if(this.board[row][column].content === '' || this.board[row][column].content === undefined){
+                    this.$refs.moveChessAudio.play();
+
+                }else{
+                    this.$refs.selectChessAudio.play();
+                }
+                if (this.cellClickData.currentCell != null) {
+                    this.cellClickData.beforeCell = this.cellClickData.currentCell;
+                }
+                this.cellClickData.currentCell = this.board[row][column];
+                this.cellClickData.currentCell.row = row;
+                this.cellClickData.currentCell.column = column;
+                this.cellClickData.otherUserId = this.otherUserId;
+                this.cellClickData.userId = this.userId;
+                this.cellClickData.columnNumber = this.columnNumber;
+                axios({
+                    url: 'handleCellClick',
+                    method: 'post',
+                    data: this.cellClickData,
+                    transformRequest: [function (data) {
+                        data = JSON.stringify(data);
+                        return data;
+                    }],
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                    },
+                }).then(response => {
+                    if (response.data.success) {
+                        //通过websocket返回信息
+                    } else {
+                        // Handle error
+                    }
+                });
+            },
+            initBoard() {
+                this.board = [
+                    [{content: this.otherChess, color: '#282c34', clickable: false},
+                        {content: this.otherChess, color: '#282c34', clickable: false},
+                        {content: this.otherChess, color: '#282c34', clickable: false},
+                        {content: this.otherChess, color: '#282c34', clickable: false}],
+                    [{content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                    [{content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false},
+                        {content: '', color: '#282c34', clickable: false}],
+                    [{content: this.currentChess, color: '#282c34', clickable: true},
+                        {content: this.currentChess, color: '#282c34', clickable: true},
+                        {content: this.currentChess, color: '#282c34', clickable: true},
+                        {content: this.currentChess, color: '#282c34', clickable: true}],
+                ];
+            },
+
+            async generateAnonymousId() {
+                try {
+                    let generateAnonymousIdDataJson = localStorage.getItem('generateAnonymousIdData');
+                    let generateAnonymousIdData = JSON.parse(generateAnonymousIdDataJson)
+                    if (generateAnonymousIdData === null) {
+                        const response = await axios.get('generateAnonymousId');
+                        if (response.data.success) {
+                            generateAnonymousIdData = response.data.data;
+                        }
+                    }
+
+                    this.userName = generateAnonymousIdData.name + "(" + generateAnonymousIdData.position + ")";
+                    this.userId = generateAnonymousIdData.userId;
+                    // 设置 Cookie，可以设置过期时间
+                    document.cookie = `userId=${this.userId}; expires=${new Date(Date.now() + 86400000).toUTCString()}; path=/`;
+                    this.ip = generateAnonymousIdData.ip;
+                    localStorage.setItem('generateAnonymousIdData', JSON.stringify(generateAnonymousIdData));
+                    console.log(generateAnonymousIdData);
+
+                } catch (error) {
+                    // 请求失败处理
+                    console.log(error);
+                }
+            },
+
+
+            initWebSocket() {
+                const WebSocket = window.WebSocket || window.MozWebSocket
+
+                socket = new WebSocket("ws://" + this.ip + ":8823/websocket");
+
+                socket.onopen = (event) => {
+                    this.type = "onopen";
+                    this.buildSocketEntityAndSend();
+                    console.log('socketEntity:', JSON.stringify(this.socketEntity));
+                    console.log('WebSocket连接已建立:', event);
+                    webSocketIsOpen = true;
+                };
+
+                socket.onmessage = () => {
+                    var message = event.data;
+                    try {
+                        const result = JSON.parse(event.data);
+                        if (result.success) {
+                            if (result.type === "MATCH_GAME") {
+                                try {
+                                    const UserDTO = result.data;
+                                    console.log("收到消息：" + UserDTO);
+                                    this.userName = UserDTO.userName;
+                                    this.userId = UserDTO.userId;
+                                    this.otherUserId = UserDTO.otherUserId;
+                                    this.otheruserName = UserDTO.otherUserName;
+                                    this.currentChess = UserDTO.cell;
+                                    this.otherChess = UserDTO.otherCell;
+                                    this.startMatchButton = "匹配成功";
+                                    this.board = UserDTO.initBoards;
+                                    this.$vant.showFailToast('匹配成功,O方先走');
+                                    this.currentBg = false;
+                                    if(this.currentBgPlay){
+                                        if(this.$refs.bgGamingAudio.paused){
+                                            this.$refs.bgGamingAudio.play();
+                                        }
+                                        if(!this.$refs.audio.paused){
+                                            this.$refs.audio.pause();
+                                        }
+                                    }
+
+                                    return;
+                                } catch (error) {
+                                    console.log("socket.onmessage.error：" + error);
+                                    this.startMatchButton = "开始匹配";
+                                }
+                            } else if(result.type === "STAND_ALONE"){
+                                try {
+                                    const UserDTO = result.data;
+                                    console.log("收到消息：" + UserDTO);
+                                    this.userName = UserDTO.userName;
+                                    this.userId = UserDTO.userId;
+                                    this.currentChess = UserDTO.cell;
+                                    this.otherChess = UserDTO.otherCell;
+                                    this.board = UserDTO.initBoards;
+                                    if(this.type !== "standAlone"){
+                                        this.$vant.showFailToast('游戏马上开始,O方先走');
+                                    }
+
+                                    //单机游戏音乐不变
+                                    /*if(this.$refs.bgGamingAudio.paused){
+                                        this.$refs.bgGamingAudio.play();
+                                    }
+                                    if(!this.$refs.audio.paused){
+                                        this.$refs.audio.pause();
+                                    }*/
+                                    return;
+                                } catch (error) {
+                                    console.log("socket.onmessage.STAND_ALONE.error：" + error);
+                                }
+                            }else if (result.type === "CELL_CLICK") {
+                                const HandleCellClickResult = result.data;
+                                console.log("HandleCellClickResult:" + HandleCellClickResult);
+                                if (HandleCellClickResult.isEnd != null && HandleCellClickResult.isEnd) {
+                                    if( HandleCellClickResult.winner === this.currentChess){
+                                        this.$refs.successAudio.play();
+                                    }else{
+                                        this.$refs.failAudio.play();
+                                    }
+                                    this.$vant.showDialog({
+                                        title: '游戏结束',
+                                        message: "恭喜"+HandleCellClickResult.winner + '方获胜;'+"有一方点击确认即会重开一局",
+                                    }).then(() => {
+                                        this.initBoard();
+                                        this.startMatchButton = "开始匹配";
+                                    });
+                                } else {
+                                    if (HandleCellClickResult.canPlacePosition != null) {
+                                        //todo 判断是否有棋子被吃掉
+                                        this.board = HandleCellClickResult.canPlacePosition;
+                                    }
+                                }
+                            }else if(result.type === "INVITE_FRIEND"){
+                                //有人邀请你
+                                const otherUserDTO = result.data;
+                                this.friendUserId = otherUserDTO.userId;
+                                this.$vant.showConfirmDialog({
+                                    title: '邀请函',
+                                    message:otherUserDTO.userName+"正在邀请您一起玩游戏("+otherUserDTO.columnNumber+"阶) 是否同意",
+                                }).then(() => {
+                                    this.columnNumber = otherUserDTO.columnNumber;
+                                    // on confirm
+                                    this.type = "agreeInvite";
+                                    this.buildSocketEntityAndSend();
+                                    //socket.send("agreeInvite:" + this.userId + ":" + otherUserDTO.userId);
+                                    this.$vant.showFailToast('您已同意对方邀请,游戏马上开始');
+                                    this.columnButtonClick(this.columnNumber,false);
+                                }).catch(() => {
+                                        // on cancel
+                                        this.$vant.showFailToast('您已拒绝对方邀请');
+                                        this.type = "rejectInvite";
+                                        this.buildSocketEntityAndSend();
+                                        //socket.send("rejectInvite:" + this.userId + ":" + otherUserDTO.userId);
+                                    });
+                            }
+                        }else {
+                            this.$vant.showFailToast(result.message);
+                            if(result.type === "MATCH_GAME"){
+                                this.startMatchButton = "开始匹配";
+                            }
+                        }
+
+                    } catch (error) {
+                        console.log("socket.HandleCellClickResult.error：" + error);
+                    }
+                    console.log("收到消息：" + message);
+                    // 处理收到的消息
+                };
+
+                socket.onclose = (event) => {
+                    console.log('WebSocket连接已关闭:', event);
+                    // Try to reconnect after a delay
+                    setTimeout(() => {
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            this.initWebSocket();
+                            reconnectAttempts++;
+                        }else{
+                            return;
+                        }
+                    }, 3000); // 调整延迟时间，根据需要进行调整
+                    this.type = "onclose";
+                    this.buildSocketEntityAndSend();
+                    webSocketIsOpen = false;
+                    //socket.send("onclose:" + this.userId + ":" + this.userName);
+                };
+
+                socket.onerror = (event) => {
+                    console.log('WebSocket发生错误:', event);
+                    this.type = "error";
+                    this.buildSocketEntityAndSend();
+                    //socket.send("error:" + this.userId + ":" + this.userName);
+                };
+
+
+            },
+        },
+        async mounted() {
+            if(window.location.href.includes("appointInvite")){
+                if([[${inviteOtherUserId}]] !=='' && [[${inviteOtherUserId}]] !==null){
+                    this.friendUserId = [[${inviteOtherUserId}]];
+                }
+                //将其余按钮隐藏,显示返回首页按钮
+                this.showReturnButton = true;
+            }
+            /*else if(window.location.href.includes("appointInvite")){
+                axios({
+                    url: 'index',
+                    method: 'get',
+                    transformRequest: [],
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8',
+                    },
+                })
+            }*/
+            await this.generateAnonymousId();
+            this.initBoard();
+            this.initWebSocket();
+            // 在组件挂载后，通过 $refs 获取 audio 元素并调用 play 方法
+            this.$vant.showDialog({
+                title: '走顶游戏介绍',
+                message: '走顶是一款二吃一的休闲游戏',
+            }).then(() => {
+                // on close
+                this.bgMusicController(true)
+            });
+            console.log("columnNumber:"+[[${columnNumber}]]);
+            console.log("inviteOtherUserId:"+[[${inviteOtherUserId}]]);
+            if([[${columnNumber}]] !=='' && [[${columnNumber}]] !==null){
+                if([[${inviteOtherUserId}]] !=='' && [[${inviteOtherUserId}]] !==null){
+                    console.log("setInterval开始执行")
+                    setTimeout(() => {
+                        if(webSocketIsOpen){
+                            //说明是点击别人的邀请链接进来的 需要和别人开始游戏
+                            this.columnNumber = [[${columnNumber}]];
+                            // on confirm
+                            this.type = "appointInvite";
+                            this.buildSocketEntityAndSend();
+                            this.$vant.showFailToast('您已同意对方邀请,游戏马上开始');
+                            this.fiveColor = "#61dafb";
+                            this.fourColor = "#61dafb";
+                            this.sixColor = "#61dafb";
+                            if(this.columnNumber === 4 || this.columnNumber === "4"){
+                                this.fourColor = "rgb(76 204 32)";
+                                this.fiveColor = "#61dafb";
+                                this.sixColor = "#61dafb";
+                            }else if(this.columnNumber === 5 || this.columnNumber === "5"){
+                                this.fiveColor = "rgb(76 204 32)";
+                                this.fourColor = "#61dafb";
+                                this.sixColor = "#61dafb";
+                            } else if(this.columnNumber === 6 || this.columnNumber === "6"){
+                                this.sixColor = "rgb(76 204 32)";
+                                this.fiveColor = "#61dafb";
+                                this.fourColor = "#61dafb";
+                            }
+                            clearInterval();
+                        }
+                    }, 1000);
+
+                }
+            }
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    // 页面被隐藏，用户离开
+                    console.log("页面被隐藏，用户离开");
+                    this.type = "oncloseing";
+                    this.buildSocketEntityAndSend();
+                    //socket.send("oncloseing:" + this.userId+":"+this.userName);
+                } else {
+                    // 页面被显示，用户回来
+                    // 重新建立 WebSocket 连接
+                    console.log("页面被显示，用户回来");
+                    this.type = "coming";
+                    this.buildSocketEntityAndSend();
+                    //socket.send("coming:" + this.userId+":"+this.userName);
+                }
+            });
+            
+        },
+    });
+    let socket;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
+    let webSocketIsOpen =false;
+    app.use(vant);
+    // Register vant globally
+    app.config.globalProperties.$vant = vant;
+    // Mount the app
+    app.mount('#app');
+</script>
+
+</body>
+</html>

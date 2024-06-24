@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .board {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #61dafb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.5em;
+            margin: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="board">
+        <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
+            <div v-for="(cell, columnIndex) in row" :key="columnIndex" class="cell" :style="{ backgroundColor: cell.color }" @click="handleCellClick(rowIndex, columnIndex)">
+                {{ cell.content }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            userName: 'John Doe', // Replace with actual user name
+            board: [
+                [{ content: 'X', color: '#282c34', clickable: false },
+                    { content: 'X', color: '#282c34', clickable: true },
+                    { content: 'X', color: '#282c34', clickable: true },
+                    { content: 'X', color: '#282c34', clickable: true },],
+            ],
+            cellClickData:{
+                boards:'',
+                row:'',
+                column:'',
+                currentCell:null,
+                beforeCell:null,
+            }
+        },
+        methods: {
+            handleCellClick(row, column) {
+                console.log(`Clicked on cell at row ${row}, column ${column}`);
+                console.log(this.board);  // 输出当前的 board 数组
+                if(!this.board[row][column].clickable){
+                    alert("不可点击");
+                    return;
+                }
+                // Send a request to the backend with the position information
+                this.cellClickData.row = row;
+                this.cellClickData.column = column;
+                this.cellClickData.boards = this.board;
+                if(this.cellClickData.currentCell != null){
+                    this.cellClickData.beforeCell = this.cellClickData.currentCell;
+                }
+                this.cellClickData.currentCell = this.board[row][column];
+                this.cellClickData.currentCell.row=row;
+                this.cellClickData.currentCell.column=column;
+                axios({
+                    url: 'handleCellClick',
+                    method: 'post',
+                    data: this.cellClickData,
+                    transformRequest: [function (data) {
+                        data = JSON.stringify(data)
+                        return data
+                    }],
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8'
+                    }
+                }).then(response =>{
+                    if(response.data.success){
+                        if(response.data.data.isEnd){
+                            alert(response.data.data.winner);
+                        }else{
+                            this.board = response.data.data.canPlacePosition;
+                        }
+                    }else{
+
+                    }
+                })
+            }
+        },
+        mounted() {
+            // Set initial pieces in the first and fourth rows
+            /*this.$set(this.board[0][0], 'content', 'X');
+            this.$set(this.board[0][1], 'content', 'X');
+            this.$set(this.board[0][2], 'content', 'X');
+            this.$set(this.board[0][3], 'content', 'X');
+
+            this.$set(this.board[3][0], 'content', 'O');
+            this.$set(this.board[3][1], 'content', 'O');
+            this.$set(this.board[3][2], 'content', 'O');
+            this.$set(this.board[3][3], 'content', 'O');*/
+        }
+    });
+</script>
+
+</body>
+</html>

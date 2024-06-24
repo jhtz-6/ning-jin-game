@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myf.zouding.database.mapper.GameResultMapper">
+
+    <select id="selectWinCountsByGameType" parameterType="list" resultType="com.myf.zouding.database.entity.GameResultDO">
+        SELECT player1_id player1Id, COUNT(1) as count
+        FROM game_result
+        <where>
+            <if test="gameType != null and gameType != ''">
+                AND game_type = #{gameType}
+            </if>
+        </where>
+        AND player1_id IN
+        <foreach item="item" index="index" collection="playerIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        GROUP BY player1_id
+    </select>
+
+    <select id="selectLoseCountsByGameType" parameterType="list" resultType="com.myf.zouding.database.entity.GameResultDO">
+        SELECT player2_id player2Id, COUNT(1) as count
+        FROM game_result
+        <where>
+            <if test="gameType != null and gameType != ''">
+                AND game_type = #{gameType}
+            </if>
+        </where>
+        AND player2_id IN
+        <foreach item="item" index="index" collection="playerIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        GROUP BY player2_id
+    </select>
+
+</mapper>
+

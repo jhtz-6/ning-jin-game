@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/mui/3.7.1/css/mui.min.css">
+
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        h2 {
+            text-align: center;
+            color: #3498db;
+            font-size: 1.5em;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-top: 10px;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            outline: none;
+            font-size: 1em;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input:focus {
+            border-color: #2980b9;
+        }
+
+        .code-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .code-input {
+            margin-bottom: 15px;
+            flex: 1;
+            font-size: 1em;
+        }
+
+        #getCode {
+            margin-left: 10px;
+            padding: 10px;
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            font-size: 0.9em;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            font-size: 1.2em;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #27ae60;
+        }
+
+        .mui-toast-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+
+        .mui-toast {
+            background-color: #2ecc71;
+            color: #fff;
+            border-radius: 4px;
+            padding: 15px;
+            font-size: 1em;
+            text-align: center;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Register</h2>
+    <form id="registerForm">
+        <label for="registerUsername">Username</label>
+        <input type="text" id="registerUsername" name="registerUsername" required>
+
+        <label for="registerPassword">Password</label>
+        <input type="password" id="registerPassword" name="registerPassword" required>
+
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required>
+
+        <label for="phoneNumber">Phone Number</label>
+        <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" required>
+
+        <div class="code-container">
+            <label for="verificationCode">Verification Code</label>
+            <input type="text" id="verificationCode" name="verificationCode" class="code-input" required>
+            <button type="button" id="getCode" onclick="getVerificationCode()">Get Code</button>
+        </div>
+
+        <button type="button" onclick="register()">Register</button>
+    </form>
+</div>
+
+<script src="https://cdn.staticfile.org/mui/3.7.1/js/mui.min.js"></script>
+<script>
+    let codeButton = document.getElementById('getCode');
+    let seconds = 60;
+
+    function getVerificationCode() {
+        // Simulate API request to send verification code
+        mui.toast('Verification code sent successfully');
+
+        // Disable button and start countdown
+        codeButton.disabled = true;
+        countdown();
+    }
+
+    function countdown() {
+        codeButton.innerHTML = `${seconds}s`;
+        seconds--;
+
+        if (seconds < 0) {
+            // Enable button and reset countdown
+            codeButton.innerHTML = 'Get Code';
+            codeButton.disabled = false;
+            seconds = 60;
+        } else {
+            setTimeout(countdown, 1000);
+        }
+    }
+
+    function register() {
+        // Handle register logic
+        mui.toast('Register clicked');
+    }
+</script>
+</body>
+</html>
