@@ -15,6 +15,7 @@ import com.myf.zouding.model.res.HandleCellClickResult;
 import com.myf.zouding.netty.handler.WebSocketHandler;
 import com.myf.zouding.service.WxApiHandlerService;
 import com.myf.zouding.service.ZouDingService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import java.util.UUID;
  * @CreateTime: 2023-12-12  21:58
  * @Description: ZouDingFacade
  */
+@Slf4j
 @RestController
 @RequestMapping("zouDing")
 public class ZouDingFacade {
@@ -149,6 +151,7 @@ public class ZouDingFacade {
      */
     @GetMapping("/clickInvitation")
     public void clickInvitation(String invitedId, String invitationCode) {
+        log.info("ZouDingFacade.clickInvitation.invitedId:{},invitationCode:{}", invitedId, invitationCode);
         if (StringUtils.isBlank(invitationCode) || Objects.isNull(invitedId)) {
             WebSocketHandler.broadcastMessage(invitedId, JSON.toJSONString(WebSocketResult.failure(
                     ResultErrorEnum.invitation_expired.getMessage(), WebSocketMessageType.MATCH_GAME)));
@@ -200,6 +203,7 @@ public class ZouDingFacade {
     @Deprecated
     @GetMapping("/webSocketClose")
     public Result<String> webSocketClose(String userId, String userName) {
+        log.info("ZouDingFacade.webSocketClose.userId:{},userName:{}", userId, userName);
         if (StringUtils.isBlank(userId) || Objects.isNull(userName)) {
             return Result.failure("userId and userName cannot be null");
         }
@@ -212,10 +216,10 @@ public class ZouDingFacade {
     }
 
     @GetMapping("/feedBack")
-    public Result<Boolean> feedBack(String userId, String userName,String content, String subject) {
-        if (StringUtils.isAnyBlank(content, subject,userId,userName)) {
+    public Result<Boolean> feedBack(String userId, String userName, String content, String subject) {
+        if (StringUtils.isAnyBlank(content, subject, userId, userName)) {
             return Result.failure("param cannot be null");
         }
-        return wxZouDingService.feedBack(userId,userName,content, subject);
+        return wxZouDingService.feedBack(userId, userName, content, subject);
     }
 }

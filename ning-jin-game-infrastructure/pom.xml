@@ -10,6 +10,7 @@
     <artifactId>ning-jin-game-infrastructure</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ning-jin-game-infrastructure</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -56,14 +57,7 @@
             <groupId>com.myf</groupId>
             <artifactId>ning-jin-game-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>

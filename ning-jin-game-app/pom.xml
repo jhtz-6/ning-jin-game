@@ -10,6 +10,7 @@
     <artifactId>ning-jin-game-app</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ning-jin-game-app</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
